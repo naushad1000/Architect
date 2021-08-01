@@ -1,0 +1,51 @@
+Parameters:
+  SNSTopicARN:
+    Type: String
+    Default: awsSNSTopicArnExample
+  TopicRegion:
+    Type: String
+    Default: us-east-1
+Resources:
+  Queue:
+    Type: 'AWS::SQS::Queue'
+  SnsSubscription:
+    Type: 'AWS::SNS::Subscription'
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt Queue.Arn
+      Region: !Ref TopicRegion
+      TopicArn: !Ref SNSTopicARN
+    DependsOn:
+      - SNSTXM71
+  LEIC1PF4M:
+    Type: 'AWS::Lambda::EventInvokeConfig'
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt Queue.Arn
+      Region: !Ref TopicRegion
+      OriginalTextUpload:
+        Type: S3
+        Properties:
+          Bucket: S3BM7X5
+          Events: 's3:ObjectCreated:*'
+  S3BM7X5:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Id: GlacierRule
+            Prefix: glacier
+            Status: Enabled
+            ExpirationInDays: 365
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: GLACIER
+      VersioningConfiguration:
+        Status: Enabled
+      DeletionPolicy: Retain
+    DependsOn:
+      - LEIC1PF4M
+  SNSTXM71:
+    Type: 'AWS::SNS::Topic'
+    Properties: {}
+ 
